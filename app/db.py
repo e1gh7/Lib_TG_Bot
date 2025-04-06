@@ -3,6 +3,7 @@ from sqlalchemy.orm import DeclarativeBase, Session
 from sqlalchemy.orm import relationship
 import asyncio
 import aiohttp
+import bot
 
 Books_DB = "postgresql://e1gh7:3307@localhost:5432/BOOKS_DB"
 engine = create_engine(Books_DB)
@@ -56,6 +57,14 @@ def put_genre_and_books(books, genre):
             db.add(book)
     db.commit()
 
+
+async def CreateGenreKeyboard():
+    with Session(autoflush=False, bind=engine) as db:
+        genres = db.query(Genre).all()
+    genre_names = [genre.name for genre in genres]
+    keyboard = await bot.Keyboard.GenreKeyboard(genre_names)
+    return keyboard
+
 semaphore = asyncio.Semaphore(10)
 
 async def fetch(session, url, genre):
@@ -68,7 +77,8 @@ async def main():
     async with aiohttp.ClientSession() as session:
         await asyncio.gather(*[fetch(session, BASE_URL.format(genre), genre) for genre in genres])
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 
 
 
